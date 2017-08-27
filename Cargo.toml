@@ -1,0 +1,8 @@
+[package]
+name = "cargo-testify"
+version = "0.1.0"
+authors = ["Sergey Potapov <blake131313@gmail.com>"]
+
+[dependencies]
+notify = "^2.5.0"
+regex = "0.2"
