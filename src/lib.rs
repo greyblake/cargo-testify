@@ -8,25 +8,27 @@ use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::channel;
-use std::time::{Instant, Duration};
+use std::time::Instant;
 
 mod outcome;
 use outcome::Outcome;
 
 mod notifiers;
-use notifiers::*;
+use notifiers::{Notify, NotifySend};
 
+mod config;
+use config::{Config, ConfigBuilder};
 
+// TODO: implement filter for files like .git, /target, etc..
 pub fn run() {
-    let project_dir = std::env::current_dir().expect("Failed to get current directory");
-    let src_dir = project_dir.join("src");
+    let config = ConfigBuilder::new().build();
+
+    let project_dir = detect_project_dir();
 
     let (tx, rx) = channel();
     let mut watcher: RecommendedWatcher = Watcher::new(tx).expect("Failed to obtain a watcher");
 
-    watcher.watch(src_dir).expect("Failed to start watcher");
-
-    let ignore_duration = Duration::from_millis(300);
+    watcher.watch(project_dir).expect("Failed to start watcher");
 
     let mut last_run_at = Instant::now();
     run_tests();
@@ -34,7 +36,7 @@ pub fn run() {
     loop {
         match rx.recv() {
             Ok(_event) => {
-                if Instant::now() - last_run_at > ignore_duration {
+                if Instant::now() - last_run_at > config.ignore_duration {
                     run_tests();
                     last_run_at = Instant::now();
                 }
@@ -48,6 +50,24 @@ pub fn run() {
     }
 }
 
+/// Search for Cargo.toml file starting from the current directory,
+/// going with every step to parent directory. If directory with
+/// Cargo.toml is found return it, otherwise print error message and
+/// terminate the process.
+fn detect_project_dir() -> std::path::PathBuf {
+    let current_dir = std::env::current_dir().expect("Failed to get current directory");
+    let mut optional_dir = Some(current_dir.as_path());
+
+    while let Some(dir) = optional_dir {
+        let cargo_toml = dir.join("Cargo.toml");
+        if cargo_toml.is_file() { return cargo_toml; }
+        optional_dir = dir.parent();
+    }
+
+    eprintln!("Error: could not find `Cargo.toml` in {:?} or any parent directory.", current_dir);
+    std::process::exit(1);
+}
+
 pub fn run_tests() {
     let result = Command::new("cargo")
         .args(&["test"])
@@ -57,7 +77,6 @@ pub fn run_tests() {
 
     match result {
         Ok(mut child) => {
-
             let stdout = child.stdout.take().unwrap();
             let stdout_buf_reader = BufReader::new(stdout);
             let stdout_buffer = Arc::new(Mutex::new(String::new()));
@@ -71,8 +90,6 @@ pub fn run_tests() {
                     println!("{}", line);
                 }
             });
-
-
 
             let stderr = child.stderr.take().unwrap();
             let stderr_buf_reader = BufReader::new(stderr);
