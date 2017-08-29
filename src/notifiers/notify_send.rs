@@ -1,10 +1,9 @@
+use notifiers::Notify;
 use outcome::Outcome;
 use std::process::Command;
 
-pub trait Notify {
-    fn notify(&self, outcome: Outcome);
-}
-
+/// Shows notification messages using `notify-send` command.
+/// To run this command in Linux, one requires to install `libnotify-bin` system package.
 pub struct NotifySend;
 
 impl NotifySend {
