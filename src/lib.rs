@@ -1,5 +1,6 @@
 extern crate notify;
 extern crate regex;
+#[macro_use] extern crate error_chain;
 
 use notify::{RecommendedWatcher, Watcher};
 use regex::Regex;
@@ -10,6 +11,8 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc::channel;
 use std::time::Instant;
 
+mod errors;
+
 mod outcome;
 use outcome::Outcome;
 
@@ -19,16 +22,23 @@ use notifiers::{Notify, NotifySend};
 mod config;
 use config::{Config, ConfigBuilder};
 
+//mod reactor;
+
 // TODO: implement filter for files like .git, /target, etc..
 pub fn run() {
-    let config = ConfigBuilder::new().build();
-
     let project_dir = detect_project_dir();
+    let notifier = obtain_notifier();
+
+    let config = ConfigBuilder::new()
+        .project_dir(project_dir)
+        .notifier(notifier)
+        .build()
+        .unwrap();
 
     let (tx, rx) = channel();
     let mut watcher: RecommendedWatcher = Watcher::new(tx).expect("Failed to obtain a watcher");
 
-    watcher.watch(project_dir).expect("Failed to start watcher");
+    watcher.watch(config.project_dir).expect("Failed to start watcher");
 
     let mut last_run_at = Instant::now();
     run_tests();
@@ -42,8 +52,8 @@ pub fn run() {
                 }
             },
             Err(err) => {
-                println!("Unexpected error occured:");
-                println!("  {:?}", err);
+                eprintln!("Unexpected error occurred:");
+                eprintln!("  {:?}", err);
                 std::process::exit(1);
             }
         }
@@ -60,7 +70,7 @@ fn detect_project_dir() -> std::path::PathBuf {
 
     while let Some(dir) = optional_dir {
         let cargo_toml = dir.join("Cargo.toml");
-        if cargo_toml.is_file() { return cargo_toml; }
+        if cargo_toml.is_file() { return dir.to_path_buf(); }
         optional_dir = dir.parent();
     }
 
