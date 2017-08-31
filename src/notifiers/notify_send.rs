@@ -15,7 +15,7 @@ impl NotifySend {
 impl Notify for NotifySend {
     fn notify(&self, outcome: Outcome) {
         let args = match outcome {
-            Outcome::TestsPassed(msg) => vec!["Test passed", msg, "--icon=face-angel"],
+            Outcome::TestsPassed(mut  msg) => vec!["Test passed", msg, "--icon=face-angel"],
             Outcome::TestsFailed(msg) => vec!["Test failed", msg, "--icon=face-angry"],
             Outcome::CompileError(msg) => vec!["Error", msg, "--icon=face-angry"]
         };
