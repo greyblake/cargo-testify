@@ -1,5 +1,5 @@
 use regex::Regex;
-use outcome::Outcome;
+use report::{Report, Outcome};
 
 /// Determines what is result of running tests, based on the following information:
 /// * Did process finish successfully?
@@ -8,12 +8,12 @@ use outcome::Outcome;
 ///
 /// The structure just keeps compiled regular expressions, so they can be used
 /// every time `identify` function is called.
-pub struct OutcomeIdentifier {
+pub struct ReportBuilder {
     result_re: Regex,
     error_re: Regex
 }
 
-impl OutcomeIdentifier {
+impl ReportBuilder {
     pub fn new() -> Self {
         // Unwrap here is always safe, because the regexps are valid
         Self {
@@ -24,18 +24,18 @@ impl OutcomeIdentifier {
 
     // TODO:
     // Get rid of unwraps, instead return Outcome without text message.
-    pub fn identify<'a>(&self, process_success: bool, stdout: &'a str, stderr: &'a str) -> Outcome<'a> {
+    pub fn identify<'a>(&self, process_success: bool, stdout: &'a str, stderr: &'a str) -> Report {
         if process_success {
             let message = self.result_re.find(stdout).unwrap().as_str();
-            Outcome::TestsPassed(message)
+            Report { outcome: Outcome::TestsPassed, detail: Some(message.to_string()) }
         } else {
             match self.result_re.find(stdout) {
                 Some(matched) => {
-                    Outcome::TestsFailed(matched.as_str())
+                    Report { outcome: Outcome::TestsFailed, detail: Some(matched.as_str().to_string()) }
                 },
                 None => {
                     let message = self.error_re.find(stderr).unwrap().as_str();
-                    Outcome::CompileError(message)
+                    Report { outcome: Outcome::CompileError, detail: Some(message.to_string()) }
                 }
             }
         }

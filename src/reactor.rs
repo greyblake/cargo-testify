@@ -1,4 +1,3 @@
-use regex::Regex;
 use notify::{RecommendedWatcher, Watcher};
 
 use std::process::{Command, Stdio};
@@ -10,14 +9,12 @@ use std::process;
 use std::sync::mpsc::channel;
 
 use config::Config;
-use outcome::Outcome;
-use notifiers::{Notify, NotifySend};
-use outcome_identifier::OutcomeIdentifier;
+use report_builder::ReportBuilder;
 
 pub struct Reactor {
     config: Config,
     last_run_at: Instant,
-    outcome_identifier: OutcomeIdentifier
+    report_builder: ReportBuilder
 }
 
 impl Reactor {
@@ -25,7 +22,7 @@ impl Reactor {
         Self {
             config,
             last_run_at: Instant::now(),
-            outcome_identifier: OutcomeIdentifier::new()
+            report_builder: ReportBuilder::new()
         }
     }
 
@@ -95,8 +92,8 @@ impl Reactor {
                 let stdout_output = stdout_buffer.lock().unwrap().clone();
                 let stderr_output = stderr_buffer.lock().unwrap().clone();
 
-                let outcome = self.outcome_identifier.identify(exit_status.success(), &stdout_output, &stderr_output);
-                self.config.notifier.notify(outcome);
+                let report = self.report_builder.identify(exit_status.success(), &stdout_output, &stderr_output);
+                self.config.notifier.notify(report);
             }
             Err(err) => {
                 eprintln!("Failed to spawn `cargo test`");

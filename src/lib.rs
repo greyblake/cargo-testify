@@ -3,11 +3,11 @@ extern crate regex;
 #[macro_use] extern crate error_chain;
 
 mod errors;
-mod outcome;
+mod report;
 mod notifiers;
 mod config;
 mod reactor;
-mod outcome_identifier;
+mod report_builder;
 
 use notifiers::{Notify, NotifySend};
 use config::ConfigBuilder;
