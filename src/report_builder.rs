@@ -22,20 +22,18 @@ impl ReportBuilder {
         }
     }
 
-    // TODO:
-    // Get rid of unwraps, instead return Outcome without text message.
-    pub fn identify<'a>(&self, process_success: bool, stdout: &'a str, stderr: &'a str) -> Report {
+    pub fn identify(&self, process_success: bool, stdout: &str, stderr: &str) -> Report {
         if process_success {
-            let message = self.result_re.find(stdout).unwrap().as_str();
-            Report { outcome: Outcome::TestsPassed, detail: Some(message.to_string()) }
+            let detail  = self.result_re.find(stdout).map(|m| m.as_str().to_string() );
+            Report { outcome: Outcome::TestsPassed, detail: detail }
         } else {
             match self.result_re.find(stdout) {
                 Some(matched) => {
                     Report { outcome: Outcome::TestsFailed, detail: Some(matched.as_str().to_string()) }
                 },
                 None => {
-                    let message = self.error_re.find(stderr).unwrap().as_str();
-                    Report { outcome: Outcome::CompileError, detail: Some(message.to_string()) }
+                    let detail = self.error_re.find(stderr).map(|m| m.as_str().to_string() );
+                    Report { outcome: Outcome::CompileError, detail: detail }
                 }
             }
         }
