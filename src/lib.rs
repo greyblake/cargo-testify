@@ -2,16 +2,18 @@ extern crate notify;
 extern crate regex;
 #[macro_use] extern crate error_chain;
 
+use std::process::Command;
+
 mod errors;
 mod report;
 mod notifiers;
 mod config;
 mod reactor;
 mod report_builder;
-
-use notifiers::{Notify, NotifySend};
+use notifiers::{Notify, NotifySend, Osascript};
 use config::ConfigBuilder;
 use reactor::Reactor;
+
 
 // TODO: implement filter for files like .git, /target, etc..
 pub fn run() {
@@ -46,5 +48,29 @@ fn detect_project_dir() -> std::path::PathBuf {
 }
 
 fn obtain_notifier() -> Box<Notify> {
-    Box::new(NotifySend::new())
+    if has_command("notify-send") {
+        Box::new(NotifySend::new())
+    } else if has_command("osascript") {
+        Box::new(Osascript::new())
+    } else {
+        eprint!("notify-send or osascript are not found");
+        std::process::exit(1);
+    }
+}
+
+fn has_command(cmd: &str) -> bool {
+    Command::new("which").args(&[cmd]).status().unwrap().success()
+}
+
+#[cfg]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_has_command() {
+        // we assume if this spec is running, then cargo is definitely present
+        assert!(has_command("cargo"));
+
+        assert!(!has_command("command-which-does-not-exist"));
+    }
 }

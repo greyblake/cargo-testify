@@ -9,3 +9,6 @@ pub trait Notify {
 
 mod notify_send;
 pub use self::notify_send::NotifySend;
+
+mod osascript;
+pub use self::osascript::Osascript;
