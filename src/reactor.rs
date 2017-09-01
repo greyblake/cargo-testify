@@ -51,6 +51,10 @@ impl Reactor {
         }
     }
 
+    /// Spawn `cargo test` and catch stdout and stderr, then build report and call notifier.
+    /// TODO: Number of things can and have to be improved here:
+    ///   * Preserve color output of `cargo test`
+    ///   * Is it possible intercept stdout and stderr in one thread using futures?
     pub fn run_tests(&self) {
         let result = Command::new("cargo")
             .args(&["test"])
@@ -60,6 +64,7 @@ impl Reactor {
 
         match result {
             Ok(mut child) => {
+                // Catch stdout
                 let stdout = child.stdout.take().unwrap();
                 let stdout_buf_reader = BufReader::new(stdout);
                 let stdout_buffer = Arc::new(Mutex::new(String::new()));
@@ -74,6 +79,7 @@ impl Reactor {
                     }
                 });
 
+                // Catch stderr
                 let stderr = child.stderr.take().unwrap();
                 let stderr_buf_reader = BufReader::new(stderr);
                 let stderr_buffer = Arc::new(Mutex::new(String::new()));
@@ -88,7 +94,7 @@ impl Reactor {
                     }
                 });
 
-                let exit_status = child.wait().expect("failed to wait on child");
+                let exit_status = child.wait().expect("failed to wait for child process `cargo test`");
                 let stdout_output = stdout_buffer.lock().unwrap().clone();
                 let stderr_output = stderr_buffer.lock().unwrap().clone();
 
