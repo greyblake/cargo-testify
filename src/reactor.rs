@@ -1,4 +1,4 @@
-use notify::{RecommendedWatcher, Watcher};
+use notify::{RecommendedWatcher, Watcher, Event};
 
 use std::process::{Command, Stdio};
 use std::time::Instant;
@@ -36,8 +36,8 @@ impl Reactor {
 
         loop {
             match rx.recv() {
-                Ok(_event) => {
-                    if Instant::now() - self.last_run_at > self.config.ignore_duration {
+                Ok(event) => {
+                    if self.should_react(event) {
                         self.run_tests();
                         self.last_run_at = Instant::now();
                     }
@@ -51,11 +51,26 @@ impl Reactor {
         }
     }
 
+    fn should_react(&self, event: Event) -> bool {
+        // ignore event if tests just finished very recently
+        if Instant::now() - self.last_run_at < self.config.ignore_duration {
+            return false;
+        }
+
+        match event.path {
+            Some(path) => {
+                // React if the changed file is not withing project/target directory
+                !path.starts_with(self.config.target_dir.as_path())
+            },
+            None => false
+        }
+    }
+
     /// Spawn `cargo test` and catch stdout and stderr, then build report and call notifier.
     /// TODO: Number of things can and have to be improved here:
     ///   * Preserve color output of `cargo test`
     ///   * Is it possible intercept stdout and stderr in one thread using futures?
-    pub fn run_tests(&self) {
+    fn run_tests(&self) {
         let result = Command::new("cargo")
             .args(&["test"])
             .stdout(Stdio::piped())
