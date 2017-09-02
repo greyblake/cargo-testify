@@ -3,6 +3,23 @@ name = "cargo-testify"
 version = "0.1.0"
 authors = ["Sergey Potapov <blake131313@gmail.com>"]
 
+description = "Tool to automatically run tests on you Rust project and notify about the result."
+keywords = ["test", "notify", "notification", "testify", "cargo"]
+license = "MIT"
+repository = "https://github.com/greyblake/cargo-testify"
+homepage = "https://github.com/greyblake/cargo-testify"
+documentation = "https://docs.rs/cargo-testify"
+readme = "README.md"
+categories = ["development-tools::testing", "development-tools::cargo-plugins"]
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md"
+]
+
+[badges]
+travis-ci = { repository = "greyblake/cargo-testify", branch = "master" }
+
 [dependencies]
 notify = "^2.5.0"
 regex = "0.2"
