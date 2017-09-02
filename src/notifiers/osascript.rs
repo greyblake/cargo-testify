@@ -1,5 +1,5 @@
 use notifiers::Notify;
-use report::{Outcome, Report};
+use report::Report;
 use std::process::Command;
 
 pub struct Osascript;

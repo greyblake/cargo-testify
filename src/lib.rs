@@ -64,7 +64,7 @@ fn has_command(cmd: &str) -> bool {
     Command::new("which").args(&[cmd]).status().unwrap().success()
 }
 
-#[cfg]
+#[cfg(test)]
 mod tests {
     use super::*;
 
