@@ -7,13 +7,17 @@ Automatically runs tests on you Rust project and notifies about the result.
 
 ## Install
 
-    cargo install cargo-testify
+```
+cargo install cargo-testify
+```
 
 ## Usage
 
-Being withing your Rust project:
+Run withing you Rust project:
 
-    cargo testify
+```
+cargo testify
+```
 
 ## How does it work?
 
