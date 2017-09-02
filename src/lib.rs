@@ -54,6 +54,8 @@ fn obtain_notifier() -> Box<Notify> {
         Box::new(Osascript::new())
     } else {
         eprint!("notify-send or osascript are not found");
+        eprint!("HELP: if you are using Debian/Ubuntu, please install package `libnotify-bin`:");
+        eprint!("    sudo apt-get install libnotify-bin");
         std::process::exit(1);
     }
 }

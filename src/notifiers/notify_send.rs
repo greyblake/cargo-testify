@@ -14,13 +14,11 @@ impl NotifySend {
 
 impl Notify for NotifySend {
     fn notify(&self, report: Report) {
-        let detail = report.detail.as_ref();
-        let mut args = match report.outcome {
-            Outcome::TestsPassed => vec!["Test passed", "--icon=face-angel"],
-            Outcome::TestsFailed => vec!["Test failed", "--icon=face-angry"],
-            Outcome::CompileError => vec!["Error", "--icon=face-angry"]
-        };
-        match detail {
+        let mut args = vec![
+            report.title(),
+            get_icon_arg(report.outcome)
+        ];
+        match report.detail.as_ref() {
             Some(msg) => args.push(msg),
             None => ()
         };
@@ -28,5 +26,12 @@ impl Notify for NotifySend {
             .args(args)
             .output()
             .expect("failed to execute `notify-send` shell command");
+    }
+}
+
+fn get_icon_arg(outcome: Outcome) -> &'static str {
+    match outcome {
+        Outcome::TestsPassed => "--icon=face-angel",
+        Outcome::TestsFailed | Outcome::CompileError => "--icon=face-angry"
     }
 }

@@ -12,20 +12,15 @@ impl Osascript {
 
 impl Notify for Osascript {
     fn notify(&self, report: Report) {
-        unimplemented!()
-    //    let detail = report.detail.as_ref();
-    //    let mut args = match report.outcome {
-    //        Outcome::TestsPassed => vec!["Test passed", "--icon=face-angel"],
-    //        Outcome::TestsFailed => vec!["Test failed", "--icon=face-angry"],
-    //        Outcome::CompileError => vec!["Error", "--icon=face-angry"]
-    //    };
-    //    match detail {
-    //        Some(msg) => args.push(msg),
-    //        None => ()
-    //    };
-    //    Command::new("notify-send")
-    //        .args(args)
-    //        .output()
-    //        .expect("failed to execute `notify-send` shell command");
+        let title = report.title();
+        let text = report.detail.unwrap_or("".to_owned());
+
+        let cmd = format!("'display notification \"{}\" with title \"{}\"'", text, title);
+        let args = vec!["-e", &cmd];
+
+        Command::new("osascript")
+            .args(args)
+            .output()
+            .expect("failed to execute `osascript` shell command");
     }
 }
