@@ -1,6 +1,8 @@
 # Cargo testify
 
-Automatically runs tests on you Rust projects and notifies about the result.
+Automatically runs tests on you Rust project and notifies about the result.
+
+![rust test with notification](https://raw.githubusercontent.com/greyblake/cargo-testify/master/artifacts/demo.gif)
 
 
 ## Install
