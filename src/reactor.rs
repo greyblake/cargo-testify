@@ -1,4 +1,5 @@
 use notify::{RecommendedWatcher, Watcher, Event};
+use notify_rust::Notification;
 
 use std::process::{Command, Stdio};
 use std::time::Instant;
@@ -10,6 +11,7 @@ use std::sync::mpsc::channel;
 
 use config::Config;
 use report_builder::ReportBuilder;
+use report::Outcome;
 
 pub struct Reactor {
     config: Config,
@@ -114,7 +116,20 @@ impl Reactor {
                 let stderr_output = stderr_buffer.lock().unwrap().clone();
 
                 let report = self.report_builder.identify(exit_status.success(), &stdout_output, &stderr_output);
-                self.config.notifier.notify(report);
+                let icon = match report.outcome {
+                    Outcome::TestsPassed => "face-angel",
+                    Outcome::TestsFailed | Outcome::CompileError => "face-angry"
+                };
+                let mut notification = Notification::new()
+                    .summary(report.title())
+                    .icon(icon)
+                    .finalize();
+                if let Some(detail) = report.detail {
+                    notification.body(&detail);
+                }
+                notification
+                    .show()
+                    .expect("unable to send notification");
             }
             Err(err) => {
                 eprintln!("Failed to spawn `cargo test`");
