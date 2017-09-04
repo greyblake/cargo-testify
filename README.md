@@ -40,4 +40,6 @@ To display notification in the Desktop environment `notify-send` (Linux) or `osa
 ## Contributors
 
 - [greyblake](https://github.com/greyblake) Potapov Sergey - creator, maintainer.
+- [hoodie](https://github.com/hoodie) Hendrik Sollich - thanks for notify-rust crate
+- [waywardmonkeys](https://github.com/waywardmonkeys) Bruce Mitchener - fix typos
 
