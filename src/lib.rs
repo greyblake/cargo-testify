@@ -1,16 +1,13 @@
 extern crate notify;
 extern crate regex;
+extern crate notify_rust;
 #[macro_use] extern crate error_chain;
-
-use std::process::Command;
 
 mod errors;
 mod report;
-mod notifiers;
 mod config;
 mod reactor;
 mod report_builder;
-use notifiers::{Notify, NotifySend, Osascript};
 use config::ConfigBuilder;
 use reactor::Reactor;
 
@@ -18,11 +15,9 @@ use reactor::Reactor;
 // TODO: implement filter for files like .git, /target, etc..
 pub fn run() {
     let project_dir = detect_project_dir();
-    let notifier = obtain_notifier();
 
     let config = ConfigBuilder::new()
         .project_dir(project_dir)
-        .notifier(notifier)
         .build()
         .unwrap();
 
@@ -47,32 +42,3 @@ fn detect_project_dir() -> std::path::PathBuf {
     std::process::exit(1);
 }
 
-fn obtain_notifier() -> Box<Notify> {
-    if has_command("notify-send") {
-        Box::new(NotifySend::new())
-    } else if has_command("osascript") {
-        Box::new(Osascript::new())
-    } else {
-        eprint!("notify-send or osascript are not found");
-        eprint!("HELP: if you are using Debian/Ubuntu, please install package `libnotify-bin`:");
-        eprint!("    sudo apt-get install libnotify-bin");
-        std::process::exit(1);
-    }
-}
-
-fn has_command(cmd: &str) -> bool {
-    Command::new("which").args(&[cmd]).status().unwrap().success()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_has_command() {
-        // we assume if this spec is running, then cargo is definitely present
-        assert!(has_command("cargo"));
-
-        assert!(!has_command("command-which-does-not-exist"));
-    }
-}
