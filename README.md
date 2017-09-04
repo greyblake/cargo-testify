@@ -10,6 +10,16 @@ Automatically runs tests on your Rust project and notifies about the result.
 
 ## Install
 
+
+
+Install prerequisites (for Debian/Ubuntu):
+
+```
+apt-get install -y libdbus-1-dev
+```
+
+Install the crate:
+
 ```
 cargo install cargo-testify
 ```
