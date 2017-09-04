@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/greyblake/cargo-testify.svg?branch=master)](https://travis-ci.org/greyblake/cargo-testify)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/greyblake/cargo-testify/master/LICENSE)
 
-Automatically runs tests on you Rust project and notifies about the result.
+Automatically runs tests on your Rust project and notifies about the result.
 
 ![rust test with notification](https://raw.githubusercontent.com/greyblake/cargo-testify/master/artifacts/demo.gif)
 
@@ -16,7 +16,7 @@ cargo install cargo-testify
 
 ## Usage
 
-Run withing you Rust project:
+Run within your Rust project:
 
 ```
 cargo testify
