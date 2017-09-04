@@ -3,7 +3,7 @@ name = "cargo-testify"
 version = "0.1.0"
 authors = ["Sergey Potapov <blake131313@gmail.com>"]
 
-description = "Tool to automatically run tests on you Rust project and notify about the result."
+description = "Tool to automatically run tests on your Rust project and notify about the result."
 keywords = ["test", "notify", "notification", "testify", "cargo"]
 license = "MIT"
 repository = "https://github.com/greyblake/cargo-testify"
