@@ -50,6 +50,14 @@ To display notification in the Desktop environment `notify-send` (Linux) or `osa
 * `Cargo.lock`
 * `build.rs`
 
+## Bypassing options to `cargo test`
+
+Run `cargo test --lib` on file change:
+
+```
+cargo testify -- --lib
+```
+
 ## License
 
 [MIT](https://github.com/greyblake/cargo-testify/blob/master/LICENSE) © [Sergey Potapov](http://greyblake.com/)
