@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::process;
 use std::sync::mpsc::channel;
+use std::path::Path;
 
 use config::Config;
 use report_builder::ReportBuilder;
@@ -60,10 +61,7 @@ impl Reactor {
         }
 
         match event.path {
-            Some(path) => {
-                // React if the changed file is not withing project/target directory
-                !path.starts_with(self.config.target_dir.as_path())
-            },
+            Some(path) => filter_allows(self.config.project_dir.as_path(), path.as_path()),
             None => false
         }
     }
@@ -142,4 +140,56 @@ fn notify(report: Report) {
     notification
         .show()
         .expect("unable to send notification");
+}
+
+
+/// Should changes in `path` file trigger running the test suite?
+fn filter_allows(project_dir: &Path, path: &Path) -> bool {
+    const FILES: &'static [&'static str] = &[
+        "src",
+        "tests",
+        "Cargo.toml",
+        "Cargo.lock",
+        "build.rs",
+    ];
+
+    FILES.iter().any(|file| {
+        let absolute_file_path = project_dir.join(file);
+        path.starts_with(absolute_file_path)
+    })
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    const PROJECT_DIR: &'static str = "/project";
+
+    fn must_allow(path: &str) {
+        let project = PathBuf::from(PROJECT_DIR);
+        let path = PathBuf::from(path);
+        assert!(filter_allows(project.as_path(), path.as_path()));
+    }
+
+    fn must_not_allow(path: &str) {
+        let project = PathBuf::from(PROJECT_DIR);
+        let path = PathBuf::from(path);
+        assert!(!filter_allows(project.as_path(), path.as_path()));
+    }
+
+    #[test]
+    fn test_filter_allows() {
+        must_allow("/project/src/main.rs");
+        must_allow("/project/src/lib/os.rs");
+        must_allow("/project/tests/watch.rs");
+        must_allow("/project/Cargo.toml");
+        must_allow("/project/Cargo.lock");
+        must_allow("/project/build.rs");
+
+        must_not_allow("/project/README.md");
+        must_not_allow("/tmp/file.rs");
+        must_not_allow("/tmp/src/file.rs");
+    }
 }

@@ -6,7 +6,6 @@ use errors::*;
 pub struct Config {
     pub ignore_duration: Duration,
     pub project_dir: PathBuf,
-    pub target_dir: PathBuf,
 }
 
 pub struct ConfigBuilder {
@@ -29,12 +28,10 @@ impl ConfigBuilder {
 
     pub fn build(self) -> Result<Config> {
         let project_dir = self.project_dir.ok_or(ErrorKind::ProjectDirMissing)?;
-        let target_dir = project_dir.join("target");
 
         let config = Config {
             ignore_duration: self.ignore_duration,
-            project_dir: project_dir,
-            target_dir: target_dir,
+            project_dir: project_dir
         };
         Ok(config)
     }
