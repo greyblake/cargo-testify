@@ -1,7 +1,10 @@
 extern crate notify;
 extern crate regex;
 extern crate notify_rust;
+extern crate clap;
 #[macro_use] extern crate error_chain;
+
+use clap::{Arg, App, SubCommand};
 
 mod errors;
 mod report;
@@ -11,13 +14,33 @@ mod report_builder;
 use config::ConfigBuilder;
 use reactor::Reactor;
 
-
-// TODO: implement filter for files like .git, /target, etc..
 pub fn run() {
-    let project_dir = detect_project_dir();
+    let matches = App::new("cargo")
+        .bin_name("cargo")
+        .help_message("")
+        .version_message("")
+        .subcommand(
+            SubCommand::with_name("testify")
+            .version("0.2.0")
+            .author("Sergey Potapov <blake131313@gmail.com>")
+            .about("Automatically runs tests for Rust project and notifies about the result.\nSource code: https://github.com/greyblake/cargo-testify")
+            .arg(Arg::with_name("cargo_test_args")
+                 .multiple(true)
+                 .last(true))
+        )
+        .get_matches();
 
+    let cargo_test_args =
+        if let Some(matches) = matches.subcommand_matches("testify") {
+            matches.values_of("cargo_test_args").map(|vals| vals.collect::<Vec<_>>()).unwrap_or(vec![])
+        } else {
+            vec![]
+        };
+
+    let project_dir = detect_project_dir();
     let config = ConfigBuilder::new()
         .project_dir(project_dir)
+        .cargo_test_args(cargo_test_args)
         .build()
         .unwrap();
 

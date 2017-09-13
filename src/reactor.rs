@@ -14,14 +14,14 @@ use config::Config;
 use report_builder::ReportBuilder;
 use report::{Outcome, Report};
 
-pub struct Reactor {
-    config: Config,
+pub struct Reactor<'a> {
+    config: Config<'a>,
     last_run_at: Instant,
     report_builder: ReportBuilder
 }
 
-impl Reactor {
-    pub fn new(config: Config) -> Self {
+impl<'a> Reactor<'a> {
+    pub fn new(config: Config<'a>) -> Self {
         Self {
             config,
             last_run_at: Instant::now(),
@@ -71,8 +71,11 @@ impl Reactor {
     ///   * Preserve color output of `cargo test`
     ///   * Is it possible intercept stdout and stderr in one thread using futures?
     fn run_tests(&self) {
+        let mut args = self.config.cargo_test_args.clone();
+        args.insert(0, "test");
+
         let result = Command::new("cargo")
-            .args(&["test"])
+            .args(args)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn();
