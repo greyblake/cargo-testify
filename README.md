@@ -42,6 +42,14 @@ The output result is parsed to identify one of the possible outcomes:
 
 To display notification in the Desktop environment `notify-send` (Linux) or `osascript` (MacOS) commands are used.
 
+## Watched files
+
+* `src/*`
+* `tests/*`
+* `Cargo.toml`
+* `Cargo.lock`
+* `build.rs`
+
 ## License
 
 [MIT](https://github.com/greyblake/cargo-testify/blob/master/LICENSE) © [Sergey Potapov](http://greyblake.com/)
