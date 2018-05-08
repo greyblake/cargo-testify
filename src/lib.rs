@@ -1,3 +1,4 @@
+extern crate glob;
 extern crate notify;
 extern crate regex;
 extern crate notify_rust;
@@ -24,22 +25,33 @@ pub fn run() {
             .version("0.2.0")
             .author("Sergey Potapov <blake131313@gmail.com>")
             .about("Automatically runs tests for Rust project and notifies about the result.\nSource code: https://github.com/greyblake/cargo-testify")
+            .arg(Arg::with_name("includes")
+                 .short("i")
+                 .long("include")
+                 .takes_value(true)
+                 .help("Comma separated list of include pattern"))
             .arg(Arg::with_name("cargo_test_args")
                  .multiple(true)
                  .last(true))
         )
         .get_matches();
 
-    let cargo_test_args =
-        if let Some(matches) = matches.subcommand_matches("testify") {
-            matches.values_of("cargo_test_args").map(|vals| vals.collect::<Vec<_>>()).unwrap_or(vec![])
-        } else {
-            vec![]
-        };
+    let cargo_test_args = if let Some(matches) = matches.subcommand_matches("testify") {
+        matches.values_of("cargo_test_args").map(|vals| vals.collect::<Vec<_>>()).unwrap_or(vec![])
+    } else {
+        vec![]
+    };
+
+    let include_patterns = matches
+        .subcommand_matches("testify")
+        .and_then(|m| m.value_of("includes"))
+        .map(|vals| vals.split(',').collect::<Vec<_>>())
+        .unwrap_or(vec![]);
 
     let project_dir = detect_project_dir();
     let config = ConfigBuilder::new()
         .project_dir(project_dir)
+        .include_patterns(&include_patterns)
         .cargo_test_args(cargo_test_args)
         .build()
         .unwrap();
@@ -64,4 +76,3 @@ fn detect_project_dir() -> std::path::PathBuf {
     eprintln!("Error: could not find `Cargo.toml` in {:?} or any parent directory.", current_dir);
     std::process::exit(1);
 }
-

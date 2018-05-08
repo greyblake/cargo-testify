@@ -21,6 +21,7 @@ include = [
 travis-ci = { repository = "greyblake/cargo-testify", branch = "master" }
 
 [dependencies]
+glob = "0.2"
 notify = "^2.5.0"
 regex = "0.2"
 error-chain = "0.10.0"

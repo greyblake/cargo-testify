@@ -1,3 +1,4 @@
+use glob::{MatchOptions, Pattern};
 use notify::{RecommendedWatcher, Watcher, Event};
 use notify_rust::Notification;
 
@@ -61,7 +62,7 @@ impl<'a> Reactor<'a> {
         }
 
         match event.path {
-            Some(path) => filter_allows(self.config.project_dir.as_path(), path.as_path()),
+            Some(path) => filter_allows(&self.config.patterns, path.as_path()),
             None => false
         }
     }
@@ -145,27 +146,20 @@ fn notify(report: Report) {
         .expect("unable to send notification");
 }
 
-
 /// Should changes in `path` file trigger running the test suite?
-fn filter_allows(project_dir: &Path, path: &Path) -> bool {
-    const FILES: &'static [&'static str] = &[
-        "src",
-        "tests",
-        "Cargo.toml",
-        "Cargo.lock",
-        "build.rs",
-    ];
-
-    FILES.iter().any(|file| {
-        let absolute_file_path = project_dir.join(file);
-        path.starts_with(absolute_file_path)
-    })
+fn filter_allows(patterns: &[Pattern], path: &Path) -> bool {
+    const MATCH_OPTIONS: MatchOptions = MatchOptions {
+        case_sensitive: true,
+        require_literal_separator: false,
+        require_literal_leading_dot: true,
+    };
+    patterns.iter().any(|p| p.matches_path_with(path, &MATCH_OPTIONS))
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use config::ConfigBuilder;
     use std::path::PathBuf;
 
     const PROJECT_DIR: &'static str = "/project";
@@ -173,13 +167,15 @@ mod tests {
     fn must_allow(path: &str) {
         let project = PathBuf::from(PROJECT_DIR);
         let path = PathBuf::from(path);
-        assert!(filter_allows(project.as_path(), path.as_path()));
+        let config = ConfigBuilder::new().project_dir(project).build().expect("Should compile config");
+        assert!(filter_allows(&config.patterns, path.as_path()));
     }
 
     fn must_not_allow(path: &str) {
         let project = PathBuf::from(PROJECT_DIR);
         let path = PathBuf::from(path);
-        assert!(!filter_allows(project.as_path(), path.as_path()));
+        let config = ConfigBuilder::new().project_dir(project).build().expect("Should compile config");
+        assert!(!filter_allows(&config.patterns, path.as_path()));
     }
 
     #[test]
@@ -192,6 +188,8 @@ mod tests {
         must_allow("/project/build.rs");
 
         must_not_allow("/project/README.md");
+        must_not_allow("/project/src/.#file.rs");
+        must_not_allow("/project/src/file.rs~");
         must_not_allow("/tmp/file.rs");
         must_not_allow("/tmp/src/file.rs");
     }
