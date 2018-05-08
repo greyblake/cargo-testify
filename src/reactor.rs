@@ -62,8 +62,12 @@ impl<'a> Reactor<'a> {
         }
 
         match event.path {
-            Some(path) => filter_allows(&self.config.patterns, path.as_path()),
-            None => false
+            Some(path) => filter_allows(
+                &self.config.project_dir,
+                &self.config.patterns,
+                path.as_path(),
+            ),
+            None => false,
         }
     }
 
@@ -147,13 +151,19 @@ fn notify(report: Report) {
 }
 
 /// Should changes in `path` file trigger running the test suite?
-fn filter_allows(patterns: &[Pattern], path: &Path) -> bool {
+fn filter_allows(project_dir: &Path, patterns: &[Pattern], mut path: &Path) -> bool {
     const MATCH_OPTIONS: MatchOptions = MatchOptions {
         case_sensitive: true,
         require_literal_separator: false,
         require_literal_leading_dot: true,
     };
-    patterns.iter().any(|p| p.matches_path_with(path, &MATCH_OPTIONS))
+
+    if let Some(p) = path.strip_prefix(project_dir).ok() {
+        path = p;
+    }
+    patterns
+        .iter()
+        .any(|p| p.matches_path_with(path, &MATCH_OPTIONS))
 }
 
 #[cfg(test)]
@@ -167,15 +177,21 @@ mod tests {
     fn must_allow(path: &str) {
         let project = PathBuf::from(PROJECT_DIR);
         let path = PathBuf::from(path);
-        let config = ConfigBuilder::new().project_dir(project).build().expect("Should compile config");
-        assert!(filter_allows(&config.patterns, path.as_path()));
+        let config = ConfigBuilder::new()
+            .project_dir(project.clone())
+            .build()
+            .expect("Should compile config");
+        assert!(filter_allows(&project, &config.patterns, path.as_path()));
     }
 
     fn must_not_allow(path: &str) {
         let project = PathBuf::from(PROJECT_DIR);
         let path = PathBuf::from(path);
-        let config = ConfigBuilder::new().project_dir(project).build().expect("Should compile config");
-        assert!(!filter_allows(&config.patterns, path.as_path()));
+        let config = ConfigBuilder::new()
+            .project_dir(project.clone())
+            .build()
+            .expect("Should compile config");
+        assert!(!filter_allows(&project, &config.patterns, path.as_path()));
     }
 
     #[test]

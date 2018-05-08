@@ -54,18 +54,9 @@ impl<'a> ConfigBuilder<'a> {
 
     pub fn build(self) -> Result<Config<'a>> {
         let project_dir = self.project_dir.ok_or(ErrorKind::ProjectDirMissing)?;
-        let patterns = self.patterns
+        let patterns: Vec<Pattern> = self.patterns
             .iter()
-            .map(|p| {
-                let total_pattern = if !p.starts_with('/') {
-                    // TODO Handle OsString -> String conversion error
-                    let escaped_project_dir = Pattern::escape(&project_dir.clone().into_os_string().into_string().expect("Non UTF-8 project path"));
-                    escaped_project_dir + "/" + p
-                } else {
-                    p.to_string()
-                };
-                Pattern::new(&total_pattern).map_err(|e| e.into())
-            })
+            .map(|p| Pattern::new(p).map_err(|e| e.into()))
             .collect::<Result<_>>()?;
 
         let config = Config {
