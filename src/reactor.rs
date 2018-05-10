@@ -151,7 +151,7 @@ fn notify(report: Report) {
 }
 
 /// Should changes in `path` file trigger running the test suite?
-fn filter_allows(project_dir: &Path, patterns: &[Pattern], mut path: &Path) -> bool {
+fn filter_allows<'a>(project_dir: &'a Path, patterns: &[Pattern], mut path: &'a Path) -> bool {
     const MATCH_OPTIONS: MatchOptions = MatchOptions {
         case_sensitive: true,
         require_literal_separator: false,
