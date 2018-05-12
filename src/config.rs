@@ -21,7 +21,7 @@ pub struct ConfigBuilder<'a> {
 
 impl<'a> ConfigBuilder<'a> {
     pub fn new() -> Self {
-        let defaults_pattenrs = vec![
+        let default_patterns = vec![
             "src/**/*.rs",
             "tests/**/*.rs",
             "Cargo.toml",
@@ -33,7 +33,7 @@ impl<'a> ConfigBuilder<'a> {
             ignore_duration: Duration::from_millis(300),
             project_dir: None,
             cargo_test_args: vec![],
-            patterns: defaults_pattenrs,
+            patterns: default_patterns,
         }
     }
 

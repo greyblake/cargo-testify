@@ -44,8 +44,8 @@ To display notification in the Desktop environment `notify-send` (Linux) or `osa
 
 ## Watched files
 
-* `src/*`
-* `tests/*`
+* `src/**/*.rs`
+* `tests/**/*.rs`
 * `Cargo.toml`
 * `Cargo.lock`
 * `build.rs`

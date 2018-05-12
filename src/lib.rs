@@ -29,7 +29,7 @@ pub fn run() {
                  .short("i")
                  .long("include")
                  .takes_value(true)
-                 .help("Comma separated list of include pattern"))
+                 .help("Comma separated list of include pattern in addition to the predefined default patterns"))
             .arg(Arg::with_name("cargo_test_args")
                  .multiple(true)
                  .last(true))
