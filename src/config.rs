@@ -54,7 +54,8 @@ impl<'a> ConfigBuilder<'a> {
 
     pub fn build(self) -> Result<Config<'a>> {
         let project_dir = self.project_dir.ok_or(ErrorKind::ProjectDirMissing)?;
-        let patterns: Vec<Pattern> = self.patterns
+        let patterns: Vec<Pattern> = self
+            .patterns
             .iter()
             .map(|p| Pattern::new(p).map_err(|e| e.into()))
             .collect::<Result<_>>()?;
