@@ -8,12 +8,12 @@ pub enum Outcome {
     TestsFailed,
 
     /// Compilation error detected
-    CompileError
+    CompileError,
 }
 
 pub struct Report {
     pub outcome: Outcome,
-    pub detail: Option<String>
+    pub detail: Option<String>,
 }
 
 impl Report {
@@ -21,7 +21,7 @@ impl Report {
         match self.outcome {
             Outcome::TestsPassed => "Tests passed",
             Outcome::TestsFailed => "Tests failed",
-            Outcome::CompileError => "Error"
+            Outcome::CompileError => "Error",
         }
     }
 }

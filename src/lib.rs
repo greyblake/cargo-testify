@@ -1,16 +1,17 @@
+extern crate clap;
 extern crate glob;
 extern crate notify;
-extern crate regex;
 extern crate notify_rust;
-extern crate clap;
-#[macro_use] extern crate error_chain;
+extern crate regex;
+#[macro_use]
+extern crate error_chain;
 
-use clap::{Arg, App, SubCommand};
+use clap::{App, Arg, SubCommand};
 
-mod errors;
-mod report;
 mod config;
+mod errors;
 mod reactor;
+mod report;
 mod report_builder;
 use config::ConfigBuilder;
 use reactor::Reactor;
@@ -37,7 +38,10 @@ pub fn run() {
         .get_matches();
 
     let cargo_test_args = if let Some(matches) = matches.subcommand_matches("testify") {
-        matches.values_of("cargo_test_args").map(|vals| vals.collect::<Vec<_>>()).unwrap_or(vec![])
+        matches
+            .values_of("cargo_test_args")
+            .map(|vals| vals.collect::<Vec<_>>())
+            .unwrap_or(vec![])
     } else {
         vec![]
     };
@@ -69,10 +73,15 @@ fn detect_project_dir() -> std::path::PathBuf {
 
     while let Some(dir) = optional_dir {
         let cargo_toml = dir.join("Cargo.toml");
-        if cargo_toml.is_file() { return dir.to_path_buf(); }
+        if cargo_toml.is_file() {
+            return dir.to_path_buf();
+        }
         optional_dir = dir.parent();
     }
 
-    eprintln!("Error: could not find `Cargo.toml` in {:?} or any parent directory.", current_dir);
+    eprintln!(
+        "Error: could not find `Cargo.toml` in {:?} or any parent directory.",
+        current_dir
+    );
     std::process::exit(1);
 }

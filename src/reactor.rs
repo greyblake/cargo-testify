@@ -1,24 +1,24 @@
 use glob::{MatchOptions, Pattern};
-use notify::{RecommendedWatcher, Watcher, Event};
+use notify::{Event, RecommendedWatcher, Watcher};
 use notify_rust::Notification;
 
-use std::process::{Command, Stdio};
-use std::time::Instant;
 use std::io::{BufRead, BufReader};
+use std::path::Path;
+use std::process;
+use std::process::{Command, Stdio};
+use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::process;
-use std::sync::mpsc::channel;
-use std::path::Path;
+use std::time::Instant;
 
 use config::Config;
-use report_builder::ReportBuilder;
 use report::{Outcome, Report};
+use report_builder::ReportBuilder;
 
 pub struct Reactor<'a> {
     config: Config<'a>,
     last_run_at: Instant,
-    report_builder: ReportBuilder
+    report_builder: ReportBuilder,
 }
 
 impl<'a> Reactor<'a> {
@@ -26,14 +26,16 @@ impl<'a> Reactor<'a> {
         Self {
             config,
             last_run_at: Instant::now(),
-            report_builder: ReportBuilder::new()
+            report_builder: ReportBuilder::new(),
         }
     }
 
     pub fn start(&mut self) {
         let (tx, rx) = channel();
         let mut watcher: RecommendedWatcher = Watcher::new(tx).expect("Failed to obtain a watcher");
-        watcher.watch(&self.config.project_dir).expect("Failed to start watcher");
+        watcher
+            .watch(&self.config.project_dir)
+            .expect("Failed to start watcher");
 
         self.last_run_at = Instant::now();
         self.run_tests();
@@ -45,7 +47,7 @@ impl<'a> Reactor<'a> {
                         self.run_tests();
                         self.last_run_at = Instant::now();
                     }
-                },
+                }
                 Err(err) => {
                     eprintln!("Unexpected error occurred:");
                     eprintln!("  {:?}", err);
@@ -117,11 +119,17 @@ impl<'a> Reactor<'a> {
                     }
                 });
 
-                let exit_status = child.wait().expect("failed to wait for child process `cargo test`");
+                let exit_status = child
+                    .wait()
+                    .expect("failed to wait for child process `cargo test`");
                 let stdout_output = stdout_buffer.lock().unwrap().clone();
                 let stderr_output = stderr_buffer.lock().unwrap().clone();
 
-                let report = self.report_builder.identify(exit_status.success(), &stdout_output, &stderr_output);
+                let report = self.report_builder.identify(
+                    exit_status.success(),
+                    &stdout_output,
+                    &stderr_output,
+                );
                 notify(report)
             }
             Err(err) => {
@@ -136,7 +144,7 @@ impl<'a> Reactor<'a> {
 fn notify(report: Report) {
     let icon = match report.outcome {
         Outcome::TestsPassed => "face-angel",
-        Outcome::TestsFailed | Outcome::CompileError => "face-angry"
+        Outcome::TestsFailed | Outcome::CompileError => "face-angry",
     };
     let mut notification = Notification::new()
         .summary(report.title())
@@ -145,9 +153,7 @@ fn notify(report: Report) {
     if let Some(detail) = report.detail {
         notification.body(&detail);
     }
-    notification
-        .show()
-        .expect("unable to send notification");
+    notification.show().expect("unable to send notification");
 }
 
 /// Should changes in `path` file trigger running the test suite?
