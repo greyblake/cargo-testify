@@ -68,4 +68,6 @@ cargo testify -- --lib
 - [greyblake](https://github.com/greyblake) Potapov Sergey - creator, maintainer.
 - [hoodie](https://github.com/hoodie) Hendrik Sollich - thanks for notify-rust crate
 - [waywardmonkeys](https://github.com/waywardmonkeys) Bruce Mitchener - fix typos
+- [Hugal31](https://github.com/Hugal31) - support of `--include` option
+
 

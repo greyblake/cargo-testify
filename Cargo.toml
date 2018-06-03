@@ -1,6 +1,6 @@
 [package]
 name = "cargo-testify"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Sergey Potapov <blake131313@gmail.com>"]
 
 description = "Tool to automatically run tests on your Rust project and notify about the result."
