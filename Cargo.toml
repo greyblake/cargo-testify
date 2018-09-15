@@ -24,6 +24,5 @@ travis-ci = { repository = "greyblake/cargo-testify", branch = "master" }
 glob = "0.2"
 notify = "^2.5.0"
 regex = "0.2"
-error-chain = "0.10.0"
 notify-rust = "3.4.2"
-clap = "2.26.0"
+structopt = "0.2.10"
