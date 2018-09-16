@@ -169,7 +169,7 @@ fn filter_allows<'a>(project_dir: &'a Path, patterns: &[Pattern], mut path: &'a 
         require_literal_leading_dot: true,
     };
 
-    if let Some(p) = path.strip_prefix(project_dir).ok() {
+    if let Ok(p) = path.strip_prefix(project_dir) {
         path = p;
     }
     patterns

@@ -39,7 +39,7 @@ impl ReportBuilder {
                     let detail = self.error_re.find(stderr).map(|m| m.as_str().to_string());
                     Report {
                         outcome: Outcome::CompileError,
-                        detail: detail,
+                        detail,
                     }
                 }
             }
