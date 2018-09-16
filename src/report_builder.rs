@@ -27,7 +27,7 @@ impl ReportBuilder {
             let detail = self.result_re.find(stdout).map(|m| m.as_str().to_string());
             Report {
                 outcome: Outcome::TestsPassed,
-                detail: detail,
+                detail,
             }
         } else {
             match self.result_re.find(stdout) {
