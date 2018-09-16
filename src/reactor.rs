@@ -3,15 +3,15 @@ use notify::{Event, RecommendedWatcher, Watcher};
 use notify_rust::Notification;
 
 use std::io::{BufRead, BufReader};
+use std::iter::once;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::process::{Command, Stdio};
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Instant;
 use std::time::Duration;
-use std::iter::once;
+use std::time::Instant;
 
 use report::{Outcome, Report};
 use report_builder::ReportBuilder;
@@ -87,8 +87,7 @@ impl Reactor {
     ///   * Is it possible intercept stdout and stderr in one thread using futures?
     fn run_tests(&self) {
         let result = Command::new("cargo")
-            .args(once("test")
-                  .chain(self.config.cargo_test_args.iter().map(String::as_ref)))
+            .args(once("test").chain(self.config.cargo_test_args.iter().map(String::as_ref)))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn();
@@ -170,7 +169,7 @@ fn filter_allows<'a>(project_dir: &'a Path, patterns: &[Pattern], mut path: &'a 
         require_literal_leading_dot: true,
     };
 
-    if let Some(p) = path.strip_prefix(project_dir).ok() {
+    if let Ok(p) = path.strip_prefix(project_dir) {
         path = p;
     }
     patterns

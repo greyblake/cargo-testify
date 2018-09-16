@@ -9,17 +9,17 @@ mod reactor;
 mod report;
 mod report_builder;
 
-use reactor::{Reactor, Config as ReactorConfig};
 use glob::Pattern;
-use structopt::StructOpt;
-use std::time::Duration;
+use reactor::{Config as ReactorConfig, Reactor};
 use std::path::PathBuf;
+use std::time::Duration;
+use structopt::StructOpt;
 
 #[derive(StructOpt)]
 #[structopt(name = "cargo", bin_name = "cargo")]
 enum CargoOpt {
     #[structopt(name = "testify")]
-    Testify(Args)
+    Testify(Args),
 }
 
 #[derive(StructOpt)]
@@ -65,7 +65,7 @@ pub fn run() {
         project_dir,
         ignore_duration,
         patterns,
-        cargo_test_args
+        cargo_test_args,
     };
 
     Reactor::new(rconfig).start()
