@@ -3,26 +3,34 @@ use notify::{Event, RecommendedWatcher, Watcher};
 use notify_rust::Notification;
 
 use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process;
 use std::process::{Command, Stdio};
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Instant;
+use std::time::Duration;
+use std::iter::once;
 
-use config::Config;
 use report::{Outcome, Report};
 use report_builder::ReportBuilder;
 
-pub struct Reactor<'a> {
-    config: Config<'a>,
+pub struct Config {
+    pub ignore_duration: Duration,
+    pub project_dir: PathBuf,
+    pub cargo_test_args: Vec<String>,
+    pub patterns: Vec<Pattern>,
+}
+
+pub struct Reactor {
+    config: Config,
     last_run_at: Instant,
     report_builder: ReportBuilder,
 }
 
-impl<'a> Reactor<'a> {
-    pub fn new(config: Config<'a>) -> Self {
+impl Reactor {
+    pub fn new(config: Config) -> Self {
         Self {
             config,
             last_run_at: Instant::now(),
@@ -78,11 +86,9 @@ impl<'a> Reactor<'a> {
     ///   * Preserve color output of `cargo test`
     ///   * Is it possible intercept stdout and stderr in one thread using futures?
     fn run_tests(&self) {
-        let mut args = self.config.cargo_test_args.clone();
-        args.insert(0, "test");
-
         let result = Command::new("cargo")
-            .args(args)
+            .args(once("test")
+                  .chain(self.config.cargo_test_args.iter().map(String::as_ref)))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn();
@@ -170,49 +176,4 @@ fn filter_allows<'a>(project_dir: &'a Path, patterns: &[Pattern], mut path: &'a 
     patterns
         .iter()
         .any(|p| p.matches_path_with(path, &MATCH_OPTIONS))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use config::ConfigBuilder;
-    use std::path::PathBuf;
-
-    const PROJECT_DIR: &'static str = "/project";
-
-    fn must_allow(path: &str) {
-        let project = PathBuf::from(PROJECT_DIR);
-        let path = PathBuf::from(path);
-        let config = ConfigBuilder::new()
-            .project_dir(project.clone())
-            .build()
-            .expect("Should compile config");
-        assert!(filter_allows(&project, &config.patterns, path.as_path()));
-    }
-
-    fn must_not_allow(path: &str) {
-        let project = PathBuf::from(PROJECT_DIR);
-        let path = PathBuf::from(path);
-        let config = ConfigBuilder::new()
-            .project_dir(project.clone())
-            .build()
-            .expect("Should compile config");
-        assert!(!filter_allows(&project, &config.patterns, path.as_path()));
-    }
-
-    #[test]
-    fn test_filter_allows() {
-        must_allow("/project/src/main.rs");
-        must_allow("/project/src/lib/os.rs");
-        must_allow("/project/tests/watch.rs");
-        must_allow("/project/Cargo.toml");
-        must_allow("/project/Cargo.lock");
-        must_allow("/project/build.rs");
-
-        must_not_allow("/project/README.md");
-        must_not_allow("/project/src/.#file.rs");
-        must_not_allow("/project/src/file.rs~");
-        must_not_allow("/tmp/file.rs");
-        must_not_allow("/tmp/src/file.rs");
-    }
 }

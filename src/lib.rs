@@ -1,73 +1,86 @@
-extern crate clap;
 extern crate glob;
 extern crate notify;
 extern crate notify_rust;
 extern crate regex;
 #[macro_use]
-extern crate error_chain;
+extern crate structopt;
 
-use clap::{App, Arg, SubCommand};
-
-mod config;
-mod errors;
 mod reactor;
 mod report;
 mod report_builder;
-use config::ConfigBuilder;
-use reactor::Reactor;
+
+use reactor::{Reactor, Config as ReactorConfig};
+use glob::Pattern;
+use structopt::StructOpt;
+use std::time::Duration;
+use std::path::PathBuf;
+
+#[derive(StructOpt)]
+#[structopt(name = "cargo", bin_name = "cargo")]
+enum CargoOpt {
+    #[structopt(name = "testify")]
+    Testify(Args)
+}
+
+#[derive(StructOpt)]
+#[structopt(name = "testify")]
+struct Args {
+    #[structopt(
+        long = "include",
+        short = "i",
+        help = "Only run tests when a file matches the pattern(s)",
+        value_name = "PATTERN",
+        default_value = "src/**/*.rs,tests/**/*.rs,Cargo.toml,Cargo.lock,build.rs",
+        raw(use_delimiter = "true"),
+    )]
+    patterns: Vec<Pattern>,
+
+    #[structopt(
+        long = "delay",
+        short = "d",
+        help = "Wait at least for provided delay (ms) before rerunning tests",
+        value_name = "MILLISECONDS",
+        default_value = "300",
+        parse(try_from_str = "duration_from_str"),
+    )]
+    ignore_duration: Duration,
+
+    #[structopt(
+        help = "Arguments to pass to `cargo test`",
+        value_name = "ARGS",
+    )]
+    cargo_test_args: Vec<String>,
+}
 
 pub fn run() {
-    let matches = App::new("cargo")
-        .bin_name("cargo")
-        .help_message("")
-        .version_message("")
-        .subcommand(
-            SubCommand::with_name("testify")
-            .version("0.2.0")
-            .author("Sergey Potapov <blake131313@gmail.com>")
-            .about("Automatically runs tests for Rust project and notifies about the result.\nSource code: https://github.com/greyblake/cargo-testify")
-            .arg(Arg::with_name("includes")
-                 .short("i")
-                 .long("include")
-                 .takes_value(true)
-                 .help("Comma separated list of include pattern in addition to the predefined default patterns"))
-            .arg(Arg::with_name("cargo_test_args")
-                 .multiple(true)
-                 .last(true))
-        )
-        .get_matches();
-
-    let cargo_test_args = if let Some(matches) = matches.subcommand_matches("testify") {
-        matches
-            .values_of("cargo_test_args")
-            .map(|vals| vals.collect::<Vec<_>>())
-            .unwrap_or(vec![])
-    } else {
-        vec![]
-    };
-
-    let include_patterns = matches
-        .subcommand_matches("testify")
-        .and_then(|m| m.value_of("includes"))
-        .map(|vals| vals.split(',').collect::<Vec<_>>())
-        .unwrap_or(vec![]);
+    let CargoOpt::Testify(Args {
+        ignore_duration,
+        patterns,
+        cargo_test_args,
+    }) = CargoOpt::from_args();
 
     let project_dir = detect_project_dir();
-    let config = ConfigBuilder::new()
-        .project_dir(project_dir)
-        .include_patterns(&include_patterns)
-        .cargo_test_args(cargo_test_args)
-        .build()
-        .unwrap();
 
-    Reactor::new(config).start()
+    let rconfig = ReactorConfig {
+        project_dir,
+        ignore_duration,
+        patterns,
+        cargo_test_args
+    };
+
+    Reactor::new(rconfig).start()
+}
+
+/// Convert a str containing milliseconds to a duration
+fn duration_from_str(s: &str) -> Result<Duration, ::std::num::ParseIntError> {
+    s.parse().map(Duration::from_millis)
 }
 
 /// Search for Cargo.toml file starting from the current directory,
 /// going with every step to parent directory. If directory with
 /// Cargo.toml is found return it, otherwise print error message and
 /// terminate the process.
-fn detect_project_dir() -> std::path::PathBuf {
+fn detect_project_dir() -> PathBuf {
     let current_dir = std::env::current_dir().expect("Failed to get current directory");
     let mut optional_dir = Some(current_dir.as_path());
 
