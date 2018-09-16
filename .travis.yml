@@ -1,9 +1,12 @@
 language: rust
+rust:
+  - stable
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libdbus-1-dev
-rust:
-  - stable
+install:
+  - rustup component add rustfmt-preview
+  - rustup component add clippy-preview
 script:
   - cargo fmt -- --check
   - touch ./src/main.rs && cargo clippy -- -D warnings
