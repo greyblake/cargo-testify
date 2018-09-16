@@ -69,5 +69,6 @@ cargo testify -- --lib
 - [hoodie](https://github.com/hoodie) Hendrik Sollich - thanks for notify-rust crate
 - [waywardmonkeys](https://github.com/waywardmonkeys) Bruce Mitchener - fix typos
 - [Hugal31](https://github.com/Hugal31) - support of `--include` option
+- [barskern](https://github.com/barskern) Ole Martin Ruud - migrate from clap to structopt
 
 
