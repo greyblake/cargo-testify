@@ -11,12 +11,12 @@ pub enum Outcome {
     CompileError,
 }
 
-pub struct Report {
+pub struct Report<'a> {
     pub outcome: Outcome,
-    pub detail: Option<String>,
+    pub detail: Option<&'a str>,
 }
 
-impl Report {
+impl<'a> Report<'a> {
     pub fn title(&self) -> &'static str {
         match self.outcome {
             Outcome::TestsPassed => "Tests passed",
