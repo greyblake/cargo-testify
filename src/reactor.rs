@@ -127,15 +127,15 @@ impl Reactor {
                 let exit_status = child
                     .wait()
                     .expect("failed to wait for child process `cargo test`");
-                let stdout_output = stdout_buffer.lock().unwrap().clone();
-                let stderr_output = stderr_buffer.lock().unwrap().clone();
+                let stdout_output = stdout_buffer.lock().unwrap();
+                let stderr_output = stderr_buffer.lock().unwrap();
 
                 let report = self.report_builder.identify(
                     exit_status.success(),
                     &stdout_output,
                     &stderr_output,
                 );
-                notify(report)
+                notify(&report)
             }
             Err(err) => {
                 eprintln!("Failed to spawn `cargo test`");
@@ -146,7 +146,7 @@ impl Reactor {
     }
 }
 
-fn notify(report: Report) {
+fn notify(report: &Report) {
     let icon = match report.outcome {
         Outcome::TestsPassed => "face-angel",
         Outcome::TestsFailed | Outcome::CompileError => "face-angry",
@@ -155,8 +155,8 @@ fn notify(report: Report) {
         .summary(report.title())
         .icon(icon)
         .finalize();
-    if let Some(detail) = report.detail {
-        notification.body(&detail);
+    if let Some(ref detail) = report.detail {
+        notification.body(detail);
     }
     notification.show().expect("unable to send notification");
 }

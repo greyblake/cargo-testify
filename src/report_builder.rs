@@ -22,9 +22,14 @@ impl ReportBuilder {
         }
     }
 
-    pub fn identify(&self, process_success: bool, stdout: &str, stderr: &str) -> Report {
+    pub fn identify<'a>(
+        &self,
+        process_success: bool,
+        stdout: &'a str,
+        stderr: &'a str,
+    ) -> Report<'a> {
         if process_success {
-            let detail = self.result_re.find(stdout).map(|m| m.as_str().to_string());
+            let detail = self.result_re.find(stdout).map(|m| m.as_str());
             Report {
                 outcome: Outcome::TestsPassed,
                 detail,
@@ -33,10 +38,10 @@ impl ReportBuilder {
             match self.result_re.find(stdout) {
                 Some(matched) => Report {
                     outcome: Outcome::TestsFailed,
-                    detail: Some(matched.as_str().to_string()),
+                    detail: Some(matched.as_str()),
                 },
                 None => {
-                    let detail = self.error_re.find(stderr).map(|m| m.as_str().to_string());
+                    let detail = self.error_re.find(stderr).map(|m| m.as_str());
                     Report {
                         outcome: Outcome::CompileError,
                         detail,
